@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Theme tokens are RGB triplets so Tailwind's `<alpha-value>` modifier works
+   (e.g. `bg-evo-lime/15`). Dark mode is the default; `[data-theme="light"]`
+   overrides the same tokens for the light variant. `evo-ink` stays dark in
+   BOTH modes because it's the "text on the blue button" color; `evo-canvas`
+   is the page/sheet surface that actually flips. */
+:root,
+[data-theme="dark"] {
+  --evo-lime: 63 200 244;
+  --evo-lime-dark: 31 168 212;
+  --evo-ink: 14 15 18;
+  --evo-text: 245 246 248;
+  --evo-canvas: 14 15 18;
+  --evo-surface: 22 24 29;
+  --evo-surface2: 30 33 40;
+  --evo-line: 42 46 56;
+  --evo-mute: 138 147 163;
+  --evo-bg: 10 11 14;
+
+  --frame-gradient: radial-gradient(ellipse at top, #1a1d24 0%, #050608 60%);
+  --attrib-bg: rgba(14, 15, 18, 0.6);
+}
+[data-theme="light"] {
+  --evo-lime: 63 200 244;
+  --evo-lime-dark: 31 168 212;
+  --evo-ink: 14 15 18;
+  --evo-text: 14 15 18;
+  /* Light-mode hierarchy is inverted: canvas (sheets) is the lightest,
+     surface/surface2 step *darker* so nested cards remain visible on white. */
+  --evo-canvas: 255 255 255;
+  --evo-surface: 244 246 248;
+  --evo-surface2: 233 237 243;
+  --evo-line: 217 221 228;
+  --evo-mute: 107 114 128;
+  --evo-bg: 247 248 250;
+
+  --frame-gradient: radial-gradient(ellipse at top, #FFFFFF 0%, #EAECEF 70%);
+  --attrib-bg: rgba(255, 255, 255, 0.85);
+}
+
+html, body {
+  background: rgb(var(--evo-bg));
+  color: rgb(var(--evo-text));
+  min-height: 100%;
+}
+
+.phone-frame-bg { background: var(--frame-gradient); }
+
+/* Hide MapLibre attribution control inside the phone frame — the demo viewport
+   is small and the attribution wraps awkwardly. Attribution is preserved in
+   compact form via the standard control. */
+.maplibregl-ctrl-attrib {
+  font-size: 9px !important;
+  background: var(--attrib-bg) !important;
+  color: rgb(var(--evo-mute)) !important;
+}
+.maplibregl-ctrl-attrib a { color: rgb(var(--evo-lime-dark)) !important; }
+.maplibregl-ctrl-logo { display: none !important; }
+
+@keyframes sheet-rise {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.sheet-rise { animation: sheet-rise 240ms cubic-bezier(0.22, 1, 0.36, 1); }
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.fade-in { animation: fade-in 180ms ease-out; }
