@@ -51,7 +51,7 @@ export function NavOverlay({ structure, car, onHorn, onArrive }: Props) {
           <button
             type="button"
             onClick={onArrive}
-            className="rounded-2xl bg-evo-lime text-evo-ink font-bold py-3 text-sm hover:bg-evo-limeDark transition"
+            className="rounded-2xl bg-evo-lime text-white font-bold py-3 text-sm hover:bg-evo-limeDark transition shadow-card"
           >
             I'm at the car
           </button>

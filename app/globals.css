@@ -9,8 +9,8 @@
    is the page/sheet surface that actually flips. */
 :root,
 [data-theme="dark"] {
-  --evo-lime: 63 200 244;
-  --evo-lime-dark: 31 168 212;
+  --evo-lime: 31 182 229;
+  --evo-lime-dark: 24 152 199;
   --evo-ink: 14 15 18;
   --evo-text: 245 246 248;
   --evo-canvas: 14 15 18;
@@ -24,8 +24,8 @@
   --attrib-bg: rgba(14, 15, 18, 0.6);
 }
 [data-theme="light"] {
-  --evo-lime: 63 200 244;
-  --evo-lime-dark: 31 168 212;
+  --evo-lime: 31 182 229;
+  --evo-lime-dark: 24 152 199;
   --evo-ink: 14 15 18;
   --evo-text: 14 15 18;
   /* Light-mode hierarchy is inverted: canvas (sheets) is the lightest,

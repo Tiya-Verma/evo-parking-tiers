@@ -8,7 +8,7 @@ import { CarDetailSheet } from "@/components/CarDetailSheet";
 import { ClosingAlert } from "@/components/ClosingAlert";
 import { NavOverlay } from "@/components/NavOverlay";
 import { EndTripReport } from "@/components/EndTripReport";
-import { DemoHud } from "@/components/DemoHud";
+import { EvoTopBar, EvoSideButtons, EvoTabBar } from "@/components/EvoChrome";
 import { CARS, getStructure, minutesUntilClose } from "@/lib/data";
 import type { Stage } from "./types";
 
@@ -21,7 +21,7 @@ export default function Page() {
   const [selectedCarId, setSelectedCarId] = useState<string | null>(FEATURED_CAR_ID);
   const [stage, setStage] = useState<Stage>("map");
   const [toast, setToast] = useState<string | null>(null);
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [theme, setTheme] = useState<"dark" | "light">("light");
 
   // Drive theme tokens via a `data-theme` attribute on <html>; globals.css
   // maps that attribute to the CSS-variable palette consumed by Tailwind.
@@ -35,12 +35,6 @@ export default function Page() {
   );
   const selectedStructure = selectedCar ? getStructure(selectedCar.structureId) : null;
 
-  // Drive the demo from a single source — clicking the HUD jumps state.
-  function jumpTo(next: Stage) {
-    setStage(next);
-    if (next !== "map" && !selectedCarId) setSelectedCarId(FEATURED_CAR_ID);
-  }
-
   function selectCar(id: string) {
     setSelectedCarId(id);
     setStage("detail");
@@ -48,8 +42,10 @@ export default function Page() {
 
   function reserve() {
     if (!selectedStructure) {
-      // Street-parked: no closing alert, jump straight to navigating.
-      setStage("navigating");
+      // Street-parked: nothing for the parking layer to add — drop the user
+      // back to the map with a confirmation toast. The real app would hand
+      // off to Apple/Google Maps here.
+      setStage("map");
       flashToast("Reserved — 30 min hold");
       return;
     }
@@ -83,17 +79,20 @@ export default function Page() {
           theme={theme}
         />
 
-        <DemoHud
-          stage={stage}
-          setStage={jumpTo}
+        {/* Real Evo app chrome — top toggle pill + floating buttons + tab bar.
+            Tab bar hides when a full-bleed sheet (closing alert, end-trip) is up
+            so the modal can sit flush at the bottom edge. */}
+        <EvoTopBar />
+        <EvoSideButtons
           theme={theme}
           onToggleTheme={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
         />
+        {(stage === "map" || stage === "detail" || stage === "navigating") && <EvoTabBar />}
 
         {/* Stage 4: Phase 1 maps handoff — represented as a slim banner since
             real handoff opens Apple/Google Maps. We surface what was passed. */}
         {stage === "navigating" && selectedStructure && (
-          <div className="absolute top-14 inset-x-3 z-30 rounded-2xl bg-evo-canvas/95 backdrop-blur-md ring-1 ring-evo-line shadow-card p-3 fade-in">
+          <div className="absolute top-28 inset-x-3 z-30 rounded-2xl bg-evo-canvas/95 backdrop-blur-md ring-1 ring-evo-line shadow-card p-3 fade-in">
             <div className="text-[10px] uppercase tracking-widest text-evo-lime font-semibold">
               Routing to lot entrance
             </div>
@@ -105,7 +104,7 @@ export default function Page() {
             <button
               type="button"
               onClick={() => setStage("arrived")}
-              className="mt-2 w-full rounded-xl bg-evo-lime text-evo-ink text-xs font-semibold py-2 hover:bg-evo-limeDark transition"
+              className="mt-2 w-full rounded-xl bg-evo-lime text-white text-xs font-bold py-2.5 hover:bg-evo-limeDark transition"
             >
               Simulate arrival at lot
             </button>

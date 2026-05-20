@@ -103,7 +103,7 @@ export function EndTripReport({ structure, gpsFloorEstimate, onSubmit, onDismiss
         <button
           type="button"
           onClick={() => onSubmit({ floor, status, barrierFree, elevatorWorking })}
-          className="mt-5 w-full rounded-2xl bg-evo-lime text-evo-ink font-bold py-3.5 text-sm hover:bg-evo-limeDark transition flex items-center justify-center gap-2"
+          className="mt-5 w-full rounded-2xl bg-evo-lime text-white font-bold py-4 text-sm hover:bg-evo-limeDark transition shadow-card flex items-center justify-center gap-2"
         >
           <Gift className="w-4 h-4" />
           Submit — earn 5 min free driving
