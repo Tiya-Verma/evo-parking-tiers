@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository status
 
-This repository currently contains **no source code**. It holds a single design document, `evo-parking-architecture.md`, which is the authoritative spec for an unbuilt feature. There is no build system, test suite, package manifest, or git history — treat the architecture doc as the source of truth for any implementation work that begins here.
+This repository contains a **Next.js (App Router) prototype** implementing the Evo Parking Navigation feature. Source code lives in `app/`, `components/`, and `lib/`, with a database schema in `schema.sql`. The design document `evo-parking-architecture.md` remains the authoritative spec — treat it as the source of truth when the implementation diverges or for any unbuilt functionality.
 
 ## What the project is
 
