@@ -3,6 +3,7 @@
 import { AlertTriangle, ArrowRightLeft, Clock } from "lucide-react";
 import { ParkingStructure, NearbyAlternative } from "@/lib/types";
 import { formatCloseTime, minutesUntilClose, NEARBY_ALTERNATIVES } from "@/lib/data";
+import { cueRing, useCue } from "@/lib/cue";
 
 interface Props {
   structure: ParkingStructure;
@@ -15,54 +16,68 @@ interface Props {
 // §9.1 reminds us: this is advisory only — Evo does not auto-cancel reservations.
 export function ClosingAlert({ structure, onSwitch, onProceed, onDismiss }: Props) {
   const minutesLeft = Math.max(0, minutesUntilClose(structure));
+  const keepCued = useCue("keep-reservation");
 
   return (
-    <div className="absolute inset-0 z-40 bg-black/70 backdrop-blur-sm flex items-end fade-in">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="closing-alert-title"
+      className="fade-in absolute inset-0 z-40 flex items-end bg-black/60 backdrop-blur-sm"
+    >
       <button
         type="button"
         aria-label="Dismiss"
         onClick={onDismiss}
         className="absolute inset-0 cursor-default"
       />
-      <div className="relative w-full bg-evo-canvas ring-1 ring-evo-line rounded-t-3xl p-5 sheet-rise shadow-sheet">
-        <div className="absolute left-1/2 -translate-x-1/2 top-2 w-10 h-1 rounded-full bg-evo-line" />
-        <div className="flex items-start gap-3 pt-2">
-          <div className="rounded-full bg-trust-unverified/15 ring-1 ring-trust-unverified/40 p-2 mt-0.5">
-            <AlertTriangle className="w-5 h-5 text-trust-unverified" />
+      <div
+        className="sheet-rise relative w-full overflow-y-auto rounded-t-3xl bg-evo-canvas px-gutter pt-2.5 shadow-sheet"
+        style={{
+          paddingBottom: "calc(var(--safe-bottom) + 12px)",
+          maxHeight: "var(--sheet-max-modal)",
+        }}
+      >
+        <div className="mx-auto h-[5px] w-9 rounded-full bg-evo-line" />
+        <div className="flex items-start gap-3 pt-4">
+          <div className="mt-0.5 rounded-full bg-tone-warn/15 p-2">
+            <AlertTriangle className="h-5 w-5 text-tone-warn" aria-hidden />
           </div>
           <div className="flex-1">
-            <div className="font-semibold text-base">Lot closing in {minutesLeft} minutes</div>
-            <p className="text-sm text-evo-text/85 mt-1 leading-snug">
-              {structure.name} closes at {formatCloseTime(structure)}. Your reserved car may
-              be inaccessible after that.
+            <h2 id="closing-alert-title" className="text-headline text-evo-text">
+              Lot closing in {minutesLeft} minutes
+            </h2>
+            <p className="mt-1 text-subhead text-evo-mute">
+              {structure.name} closes at {formatCloseTime(structure)}. Your reserved car may be
+              inaccessible after that.
             </p>
           </div>
         </div>
 
         <div className="mt-4 space-y-2">
-          <div className="text-[11px] uppercase tracking-widest text-evo-lime font-semibold px-1">
+          <h3 className="px-1 text-caption2 font-semibold uppercase tracking-widest text-evo-limeDark">
             Switch to a nearby car — fee waived
-          </div>
+          </h3>
           {NEARBY_ALTERNATIVES.map((alt) => (
             <button
               key={alt.id}
               type="button"
               onClick={() => onSwitch(alt)}
-              className="w-full flex items-center justify-between rounded-xl bg-evo-surface2 ring-1 ring-evo-line hover:ring-evo-lime/60 transition px-3 py-3 text-left"
+              className="flex min-h-tap w-full items-center justify-between gap-3 rounded-xl bg-evo-surface2 px-3 py-3 text-left transition hover:bg-evo-surface"
             >
-              <div className="flex items-center gap-3">
-                <div className="rounded-full bg-evo-lime/15 ring-1 ring-evo-lime/30 p-1.5">
-                  <ArrowRightLeft className="w-4 h-4 text-evo-lime" />
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="shrink-0 rounded-full bg-evo-lime/15 p-1.5">
+                  <ArrowRightLeft className="h-4 w-4 text-evo-limeDark" aria-hidden />
                 </div>
-                <div>
-                  <div className="text-sm font-medium">{alt.plate}</div>
-                  <div className="text-[11px] text-evo-mute">
+                <div className="min-w-0">
+                  <div className="truncate text-subhead font-medium text-evo-text">{alt.plate}</div>
+                  <div className="truncate text-caption2 text-evo-mute">
                     {alt.model} · {alt.context === "street" ? "Street parking" : "Open >2h"}
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-1 text-xs text-evo-mute">
-                <Clock className="w-3 h-3" />
+              <div className="flex shrink-0 items-center gap-1 text-caption1 text-evo-mute">
+                <Clock className="h-3 w-3" aria-hidden />
                 {alt.walkingMinutes} min walk
               </div>
             </button>
@@ -71,10 +86,11 @@ export function ClosingAlert({ structure, onSwitch, onProceed, onDismiss }: Prop
 
         <button
           type="button"
+          data-cue="keep-reservation"
           onClick={onProceed}
-          className="mt-4 w-full text-sm text-evo-mute py-2 hover:text-evo-text transition"
+          className={`mt-3 min-h-tap w-full rounded-xl text-footnote font-medium text-evo-mute transition hover:text-evo-text ${cueRing(keepCued)}`}
         >
-          I'll make it in time — keep reservation
+          I&apos;ll make it in time — keep reservation
         </button>
       </div>
     </div>

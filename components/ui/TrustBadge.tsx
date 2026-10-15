@@ -3,21 +3,24 @@ import { ShieldCheck, Users, AlertCircle, BadgeCheck } from "lucide-react";
 
 // Mapping defined in §7. Update both sides together if the spec changes —
 // the spec-coherence-reviewer subagent enforces this invariant.
-const TIERS: Record<TrustTier, { label: string; color: string; ring: string; Icon: typeof ShieldCheck }> = {
-  gps_estimated:        { label: "Unverified",  color: "text-trust-unverified", ring: "ring-trust-unverified/50", Icon: AlertCircle },
-  driver_report:        { label: "Community",   color: "text-trust-community",  ring: "ring-trust-community/50",  Icon: Users },
-  community_verified:   { label: "Verified",    color: "text-trust-verified",   ring: "ring-trust-verified/50",   Icon: ShieldCheck },
-  evo_verified:         { label: "Evo verified",color: "text-trust-evo",        ring: "ring-trust-evo/50",        Icon: BadgeCheck },
+//
+// Tier colour is reinforced by a distinct glyph and label, so the badge never
+// relies on hue alone to carry meaning. The tint fill does the containing, so
+// there is no outline — nested rings are what make a dense panel look busy.
+const TIERS: Record<TrustTier, { label: string; className: string; Icon: typeof ShieldCheck }> = {
+  gps_estimated:      { label: "Unverified",   className: "bg-trust-unverified/15 text-trust-unverified", Icon: AlertCircle },
+  driver_report:      { label: "Community",    className: "bg-trust-community/15  text-trust-community",  Icon: Users },
+  community_verified: { label: "Verified",     className: "bg-trust-verified/15   text-trust-verified",   Icon: ShieldCheck },
+  evo_verified:       { label: "Evo verified", className: "bg-trust-evo/15        text-trust-evo",        Icon: BadgeCheck },
 };
 
-export function TrustBadge({ tier, size = "sm" }: { tier: TrustTier; size?: "sm" | "xs" }) {
+export function TrustBadge({ tier }: { tier: TrustTier }) {
   const t = TIERS[tier];
-  const padding = size === "xs" ? "px-1.5 py-0.5 text-[10px]" : "px-2 py-0.5 text-[11px]";
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full bg-evo-surface2 ring-1 ${t.ring} ${t.color} ${padding} font-medium`}
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-caption2 font-semibold ${t.className}`}
     >
-      <t.Icon className={size === "xs" ? "w-2.5 h-2.5" : "w-3 h-3"} />
+      <t.Icon className="h-3 w-3" aria-hidden />
       {t.label}
     </span>
   );

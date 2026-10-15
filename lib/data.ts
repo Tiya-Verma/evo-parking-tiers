@@ -316,3 +316,12 @@ export function formatCloseTime(structure: ParkingStructure): string {
   const h12 = ((hh + 11) % 12) + 1;
   return mm === 0 ? `${h12} ${ampm}` : `${h12}:${String(mm).padStart(2, "0")} ${ampm}`;
 }
+
+// Status-bar clock for the phone mock. Reads from DEMO_NOW so the device
+// chrome agrees with the scenario the demo narrates (10:47 pm, 13 minutes
+// before Pacific Centre closes) instead of showing a stock "9:41".
+export function demoClock(): string {
+  const h = DEMO_NOW.getHours();
+  const m = DEMO_NOW.getMinutes();
+  return `${((h + 11) % 12) + 1}:${String(m).padStart(2, "0")}`;
+}

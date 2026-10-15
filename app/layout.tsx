@@ -11,7 +11,13 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#0E0F12",
+  // Required for `env(safe-area-inset-*)` to resolve on notched devices —
+  // the tab bar and bottom sheets depend on it to clear the home indicator.
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#FFFFFF" },
+    { media: "(prefers-color-scheme: dark)", color: "#0E0F12" },
+  ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

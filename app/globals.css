@@ -2,16 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Theme tokens are RGB triplets so Tailwind's `<alpha-value>` modifier works
-   (e.g. `bg-evo-lime/15`). Dark mode is the default; `[data-theme="light"]`
-   overrides the same tokens for the light variant. `evo-ink` stays dark in
-   BOTH modes because it's the "text on the blue button" color; `evo-canvas`
-   is the page/sheet surface that actually flips. */
+/* ---------------------------------------------------------------------------
+   Theme tokens. RGB triplets so Tailwind's `<alpha-value>` modifier works
+   (e.g. `bg-evo-lime/15`). Dark is the default; `[data-theme="light"]`
+   overrides the same names.
+
+   `evo-ink` is intentionally constant-dark in BOTH themes: it is the
+   "text on a cyan fill" color, not a general foreground. Anything that sits
+   on `evo-canvas` must use `evo-text`, which flips.
+   --------------------------------------------------------------------------- */
 :root,
 [data-theme="dark"] {
   --evo-lime: 31 182 229;
   --evo-lime-dark: 24 152 199;
   --evo-ink: 14 15 18;
+  /* Foreground for anything sitting on an `evo-lime` fill. Dark ink gives
+     8.1:1 against the brand cyan; white would give 2.5:1 and fail WCAG AA.
+     Flip this single token if brand ever mandates white-on-cyan. */
+  --evo-on-accent: 14 15 18;
   --evo-text: 245 246 248;
   --evo-canvas: 14 15 18;
   --evo-surface: 22 24 29;
@@ -20,6 +28,23 @@
   --evo-mute: 138 147 163;
   --evo-bg: 10 11 14;
 
+  /* Semantic tones + §7 trust-tier hues. Both sets are lightness-tuned per
+     theme so every badge clears 4.5:1 on its own surface; the hue (and so the
+     tier's identity) is preserved across themes. */
+  --tone-ok: 74 222 128;
+  --tone-warn: 251 191 36;
+  --tone-danger: 248 113 113;
+  --trust-unverified: 228 166 66;
+  --trust-community: 111 169 249;
+  --trust-verified: 63 208 180;
+  --trust-evo: 127 209 130;
+
+  /* Guided-demo callout. An inverted surface, deliberately NOT the brand
+     tint: beside a cyan CTA a cyan bubble reads as part of the button rather
+     than as guidance. Inverts per theme so it stays legible on either sheet. */
+  --demo-bubble: 240 242 246;
+  --demo-bubble-fg: 14 15 18;
+
   --frame-gradient: radial-gradient(ellipse at top, #1a1d24 0%, #050608 60%);
   --attrib-bg: rgba(14, 15, 18, 0.6);
 }
@@ -27,6 +52,7 @@
   --evo-lime: 31 182 229;
   --evo-lime-dark: 24 152 199;
   --evo-ink: 14 15 18;
+  --evo-on-accent: 14 15 18;
   --evo-text: 14 15 18;
   /* Light-mode hierarchy is inverted: canvas (sheets) is the lightest,
      surface/surface2 step *darker* so nested cards remain visible on white. */
@@ -34,11 +60,56 @@
   --evo-surface: 244 246 248;
   --evo-surface2: 233 237 243;
   --evo-line: 217 221 228;
-  --evo-mute: 107 114 128;
+  --evo-mute: 98 105 119;
   --evo-bg: 247 248 250;
+
+  --tone-ok: 21 128 61;
+  --tone-warn: 161 98 7;
+  --tone-danger: 185 28 28;
+  --trust-unverified: 154 91 0;
+  --trust-community: 29 95 209;
+  --trust-verified: 15 122 104;
+  --trust-evo: 46 125 50;
+
+  --demo-bubble: 28 30 36;
+  --demo-bubble-fg: 255 255 255;
 
   --frame-gradient: radial-gradient(ellipse at top, #FFFFFF 0%, #EAECEF 70%);
   --attrib-bg: rgba(255, 255, 255, 0.85);
+}
+
+/* ---------------------------------------------------------------------------
+   Layout metrics (HIG: 16pt layout margins, 44pt minimum hit target, content
+   kept clear of the home indicator).
+
+   `.app-viewport` is the scope that owns the safe-area values. On a real phone
+   they come from the notch/home-indicator insets. Inside the desktop phone
+   mock the chassis draws its own status bar and home indicator, so the values
+   are the fixed equivalents instead — 20px at the bottom keeps tab-bar labels
+   from colliding with the drawn indicator.
+   --------------------------------------------------------------------------- */
+.app-viewport {
+  --safe-top: max(env(safe-area-inset-top), 8px);
+  --safe-bottom: max(env(safe-area-inset-bottom), 10px);
+  --gutter: 16px;
+  --tabbar-content: 54px;
+  --tabbar-h: calc(var(--tabbar-content) + var(--safe-bottom));
+
+  /* First y-coordinate app content may use: below the safe area, the 44pt Evo
+     top bar, and a 12pt gap. */
+  --content-top: calc(var(--safe-top) + 56px);
+  /* Tallest a modal sheet may grow; it is flush to the bottom edge and hides
+     the top bar behind its own scrim. The docked car-detail sheet is bounded
+     by its wrapper instead. */
+  --sheet-max-modal: calc(100% - var(--safe-top) - 8px);
+}
+@media (min-width: 640px) {
+  .app-viewport {
+    /* The map runs under the status bar, so this clears the whole drawn band
+       (48pt, sized to contain the Dynamic Island) plus a gap. */
+    --safe-top: 56px;
+    --safe-bottom: 20px;
+  }
 }
 
 html, body {
@@ -49,9 +120,8 @@ html, body {
 
 .phone-frame-bg { background: var(--frame-gradient); }
 
-/* Hide MapLibre attribution control inside the phone frame — the demo viewport
-   is small and the attribution wraps awkwardly. Attribution is preserved in
-   compact form via the standard control. */
+/* MapLibre attribution is kept (licence requirement) but shrunk to suit the
+   phone-sized viewport. */
 .maplibregl-ctrl-attrib {
   font-size: 9px !important;
   background: var(--attrib-bg) !important;
@@ -59,6 +129,17 @@ html, body {
 }
 .maplibregl-ctrl-attrib a { color: rgb(var(--evo-lime-dark)) !important; }
 .maplibregl-ctrl-logo { display: none !important; }
+/* Keep attribution clear of the tab bar. */
+.maplibregl-ctrl-bottom-right { bottom: var(--tabbar-h) !important; }
+
+/* Sheet grabber: a 36×5pt bar that keeps a 44pt touch target without
+   spending 44pt of layout on it. */
+.sheet-grabber { position: relative; }
+.sheet-grabber::after {
+  content: "";
+  position: absolute;
+  inset: -14px 0;
+}
 
 @keyframes sheet-rise {
   from { transform: translateY(100%); opacity: 0; }
@@ -71,3 +152,57 @@ html, body {
   to { opacity: 1; }
 }
 .fade-in { animation: fade-in 180ms ease-out; }
+
+/* ---------------------------------------------------------------------------
+   Demo cues. `.cue-active` marks the one control the guided tour wants tapped
+   next: a static ring (always visible, survives reduced-motion) plus an
+   outward pulse. The ring follows the element's own border-radius.
+   --------------------------------------------------------------------------- */
+@keyframes cue-pulse {
+  from { box-shadow: 0 0 0 0 rgb(var(--evo-lime) / 0.55); }
+  to   { box-shadow: 0 0 0 12px rgb(var(--evo-lime) / 0); }
+}
+.cue-active {
+  outline: 2px solid rgb(var(--evo-lime));
+  outline-offset: 2px;
+  animation: cue-pulse 1.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+/* Map pins are imperative DOM inside MapLibre, so they get halo elements
+   rather than an outline — the teardrop is not a rounded rect. Two layers: a
+   steady ring that is always legible (and is all that remains under
+   reduced-motion), plus a pulse radiating out of it. */
+.cue-halo-static,
+.cue-halo {
+  position: absolute;
+  left: 50%;
+  top: 18px;
+  width: 38px;
+  height: 38px;
+  margin: -19px 0 0 -19px;
+  border-radius: 9999px;
+}
+.cue-halo-static {
+  border: 3px solid rgb(var(--evo-lime));
+  background: rgb(var(--evo-lime) / 0.2);
+  box-shadow: 0 0 0 2px rgb(255 255 255 / 0.7);
+}
+@keyframes cue-halo {
+  from { transform: scale(1); opacity: 0.6; }
+  to   { transform: scale(2.4); opacity: 0; }
+}
+.cue-halo {
+  background: rgb(var(--evo-lime) / 0.5);
+  animation: cue-halo 1.8s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet-rise,
+  .fade-in,
+  .cue-active,
+  .cue-halo {
+    animation: none !important;
+  }
+  .cue-halo { display: none; }
+  * { transition-duration: 0.01ms !important; }
+}

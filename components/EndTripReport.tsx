@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Gift, Signal } from "lucide-react";
 import { ParkingStructure, LotStatus } from "@/lib/types";
+import { cueRing, useCue } from "@/lib/cue";
 
 interface Props {
   structure: ParkingStructure;
@@ -23,95 +24,96 @@ export function EndTripReport({ structure, gpsFloorEstimate, onSubmit, onDismiss
   const [status, setStatus] = useState<LotStatus>("open");
   const [barrierFree, setBarrierFree] = useState(structure.barrierFreeEntry);
   const [elevatorWorking, setElevatorWorking] = useState(true);
+  const submitCued = useCue("submit-report");
 
   const floors = Object.values(structure.floorTrust).sort((a, b) => a.floor - b.floor);
 
   return (
-    <div className="absolute inset-0 z-40 bg-black/70 backdrop-blur-sm flex items-end fade-in">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="end-trip-title"
+      className="fade-in absolute inset-0 z-40 flex items-end bg-black/60 backdrop-blur-sm"
+    >
       <button
         type="button"
         aria-label="Dismiss"
         onClick={onDismiss}
         className="absolute inset-0 cursor-default"
       />
-      <div className="relative w-full bg-evo-canvas ring-1 ring-evo-line rounded-t-3xl p-5 pt-6 sheet-rise shadow-sheet max-h-[88%] overflow-y-auto">
-        <div className="absolute left-1/2 -translate-x-1/2 top-2 w-10 h-1 rounded-full bg-evo-line" />
-        <div className="text-[10px] uppercase tracking-widest text-evo-lime font-semibold">Help other drivers</div>
-        <div className="mt-1 font-semibold text-base">{structure.name}</div>
-        <div className="text-xs text-evo-mute">{structure.address}</div>
-
-        <div className="mt-4 rounded-xl bg-evo-surface2 ring-1 ring-evo-line p-3 flex items-center gap-2">
-          <Signal className="w-4 h-4 text-evo-lime" />
-          <div className="text-xs text-evo-text/85">
-            GPS pre-fill: {labelFor(gpsFloorEstimate, structure)} · Signal{" "}
-            {structure.underground ? "unavailable" : "good"}
-          </div>
+      <div
+        className="sheet-rise relative w-full overflow-y-auto rounded-t-3xl bg-evo-canvas px-gutter pt-2.5 shadow-sheet"
+        style={{
+          paddingBottom: "calc(var(--safe-bottom) + 12px)",
+          maxHeight: "var(--sheet-max-modal)",
+        }}
+      >
+        <div className="sticky top-0 z-10 -mx-gutter mb-2 flex justify-center bg-evo-canvas px-gutter pb-2">
+          <span className="h-[5px] w-9 rounded-full bg-evo-line" />
         </div>
 
-        <div className="mt-4">
-          <div className="text-xs text-evo-mute mb-1.5 font-medium">Confirm floor</div>
-          <div className="flex gap-1.5 flex-wrap">
+        <p className="text-caption2 font-semibold uppercase tracking-widest text-evo-limeDark">
+          Help other drivers
+        </p>
+        <h2 id="end-trip-title" className="mt-1 text-headline text-evo-text">
+          {structure.name}
+        </h2>
+        <p className="text-caption1 text-evo-mute">{structure.address}</p>
+
+        <div className="mt-4 flex items-center gap-2 rounded-xl bg-evo-surface2 p-3">
+          <Signal className="h-4 w-4 shrink-0 text-evo-limeDark" aria-hidden />
+          <p className="text-caption1 text-evo-text">
+            GPS pre-fill: {labelFor(gpsFloorEstimate, structure)} · Signal{" "}
+            {structure.underground ? "unavailable" : "good"}
+          </p>
+        </div>
+
+        <fieldset className="mt-4">
+          <legend className="mb-1.5 text-caption1 font-medium text-evo-mute">Confirm floor</legend>
+          <div className="flex flex-wrap gap-1.5">
             {floors.map((f) => {
               const isRoof = structure.hasRooftop && f.floor === structure.totalFloors;
               const label = labelFor(f.floor, structure, isRoof);
               const active = f.floor === floor;
               return (
-                <button
-                  key={f.floor}
-                  type="button"
-                  onClick={() => setFloor(f.floor)}
-                  className={[
-                    "rounded-xl px-3 py-2 text-sm ring-1 transition",
-                    active
-                      ? "bg-evo-lime text-evo-ink ring-evo-lime font-bold"
-                      : "bg-evo-surface2 text-evo-text/90 ring-evo-line hover:ring-evo-lime/50",
-                  ].join(" ")}
-                >
+                <Chip key={f.floor} active={active} onClick={() => setFloor(f.floor)}>
                   {label}
-                </button>
+                </Chip>
               );
             })}
           </div>
-        </div>
+        </fieldset>
 
-        <div className="mt-4">
-          <div className="text-xs text-evo-mute mb-1.5 font-medium">Lot status now</div>
+        <fieldset className="mt-4">
+          <legend className="mb-1.5 text-caption1 font-medium text-evo-mute">Lot status now</legend>
           <div className="grid grid-cols-3 gap-1.5">
             {(["open", "partial", "closed"] as LotStatus[]).map((s) => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => setStatus(s)}
-                className={[
-                  "rounded-xl py-2 text-sm capitalize ring-1 transition",
-                  status === s
-                    ? "bg-evo-lime text-evo-ink ring-evo-lime font-bold"
-                    : "bg-evo-surface2 text-evo-text/90 ring-evo-line hover:ring-evo-lime/50",
-                ].join(" ")}
-              >
-                {s}
-              </button>
+              <Chip key={s} active={status === s} onClick={() => setStatus(s)}>
+                <span className="capitalize">{s}</span>
+              </Chip>
             ))}
           </div>
-        </div>
+        </fieldset>
 
         <div className="mt-4 space-y-2">
           <Toggle label="Barrier-free entry" value={barrierFree} onChange={setBarrierFree} />
           <Toggle label="Elevator working" value={elevatorWorking} onChange={setElevatorWorking} />
         </div>
 
+        {/* §10: max 3 rewarded reports per driver per day. */}
         <button
           type="button"
+          data-cue="submit-report"
           onClick={() => onSubmit({ floor, status, barrierFree, elevatorWorking })}
-          className="mt-5 w-full rounded-2xl bg-evo-lime text-white font-bold py-4 text-sm hover:bg-evo-limeDark transition shadow-card flex items-center justify-center gap-2"
+          className={`mt-5 flex min-h-tap w-full items-center justify-center gap-2 rounded-2xl bg-evo-lime py-4 text-footnote font-bold text-evo-onAccent transition hover:bg-evo-limeDark ${cueRing(submitCued)}`}
         >
-          <Gift className="w-4 h-4" />
+          <Gift className="h-4 w-4" aria-hidden />
           Submit — earn 5 min free driving
         </button>
         <button
           type="button"
           onClick={onDismiss}
-          className="mt-2 w-full text-xs text-evo-mute py-2 hover:text-evo-text transition"
+          className="mt-1 min-h-tap w-full rounded-xl text-footnote text-evo-mute transition hover:text-evo-text"
         >
           Not now
         </button>
@@ -120,24 +122,61 @@ export function EndTripReport({ structure, gpsFloorEstimate, onSubmit, onDismiss
   );
 }
 
-function Toggle({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
+function Chip({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
   return (
     <button
       type="button"
-      onClick={() => onChange(!value)}
-      className="w-full flex items-center justify-between rounded-xl bg-evo-surface2 ring-1 ring-evo-line px-3 py-3 hover:ring-evo-lime/50 transition"
+      aria-pressed={active}
+      onClick={onClick}
+      className={[
+        "min-h-tap min-w-tap rounded-xl px-3 text-subhead transition",
+        active
+          ? "bg-evo-lime font-bold text-evo-onAccent"
+          : "bg-evo-surface2 text-evo-text hover:bg-evo-surface",
+      ].join(" ")}
     >
-      <span className="text-sm">{label}</span>
+      {children}
+    </button>
+  );
+}
+
+function Toggle({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={value}
+      onClick={() => onChange(!value)}
+      className="flex min-h-tap w-full items-center justify-between rounded-xl bg-evo-surface2 px-3 py-2 transition hover:bg-evo-surface"
+    >
+      <span className="text-subhead text-evo-text">{label}</span>
+      {/* iOS switch proportions: 51×31pt track, 27pt knob. */}
       <span
         className={[
-          "relative w-10 h-6 rounded-full transition",
+          "relative h-[31px] w-[51px] shrink-0 rounded-full transition-colors",
           value ? "bg-evo-lime" : "bg-evo-line",
         ].join(" ")}
       >
         <span
           className={[
-            "absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-card transition",
-            value ? "left-[20px]" : "left-0.5",
+            "absolute top-[2px] h-[27px] w-[27px] rounded-full bg-white shadow-card transition-all",
+            value ? "left-[22px]" : "left-[2px]",
           ].join(" ")}
         />
       </span>
@@ -148,6 +187,5 @@ function Toggle({ label, value, onChange }: { label: string; value: boolean; onC
 function labelFor(floor: number, structure: ParkingStructure, isRoofOverride?: boolean): string {
   const isRoof = isRoofOverride ?? (structure.hasRooftop && floor === structure.totalFloors);
   if (isRoof) return `P${floor}/Roof`;
-  if (floor < 0) return `P${floor}`;
   return `P${floor}`;
 }
